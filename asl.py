@@ -8,6 +8,8 @@ Original file is located at
 """
 
 import kagglehub
+import json
+
 
 # Download latest version
 path = kagglehub.dataset_download("ayuraj/asl-dataset")
@@ -161,8 +163,10 @@ model = Sequential([
     MaxPooling2D((2, 2)),
     Conv2D(128, (3, 3), activation='relu'),
     MaxPooling2D((2, 2)),
+    Conv2D(256, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
     Flatten(),
-    Dense(128, activation='relu'),
+    Dense(256, activation='relu'),
     Dropout(0.5), # Add dropout for regularization
     Dense(num_classes, activation='softmax') # Output layer with num_classes neurons and softmax activation
 ])
@@ -176,6 +180,14 @@ model.compile(
 
 # Display model summary
 model.summary()
+
+# Save class indices
+class_indices = train_generator.class_indices
+# class_indices is a dict mapping class name to index. We map index to class name.
+index_to_class = {str(v): k for k, v in class_indices.items()}
+with open('class_indices.json', 'w') as f:
+    json.dump(index_to_class, f)
+print("Class indices saved successfully as class_indices.json!")
 
 """## Model Training
 Now, we'll train the Convolutional Neural Network (CNN) model using the `train_generator` and validate it with the `validation_generator`. We'll set the number of epochs and steps per epoch.
@@ -232,4 +244,8 @@ model.save('asl_cnn_model.h5')
 print("Model saved successfully as asl_cnn_model.h5!")
 
 from google.colab import files
-files.download("asl_cnn_model.h5")
+try:
+    files.download("asl_cnn_model.h5")
+    files.download("class_indices.json")
+except Exception as e:
+    print(f"Colab download failed (probably because you are not in colab): {e}")
